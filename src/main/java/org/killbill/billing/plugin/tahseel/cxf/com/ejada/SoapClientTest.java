@@ -1,4 +1,4 @@
-package com.ejada;
+package org.killbill.billing.plugin.tahseel.cxf.com.ejada;
 
 
 import java.io.File;
@@ -49,8 +49,8 @@ public class SoapClientTest {
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
             SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss");
 
-            com.ejada.BillManageRqType _billManage_billManageRq = new BillManageRqType();
-            com.ejada.MsgRqHdrType msg_hdr_rq = new MsgRqHdrType();
+            BillManageRqType _billManage_billManageRq = new BillManageRqType();
+            MsgRqHdrType msg_hdr_rq = new MsgRqHdrType();
 
             msg_hdr_rq.setRqUID(uuid.toString());
             msg_hdr_rq.setSCId("MNFST");
@@ -100,7 +100,7 @@ public class SoapClientTest {
             _billManage_billManageRq.setMsgRqHdr(msg_hdr_rq);
             _billManage_billManageRq.setBody(bill_manage_rq_body_type);
 
-            com.ejada.BillManageRsType _billManage__return = port.billManage(_billManage_billManageRq);
+            BillManageRsType _billManage__return = port.billManage(_billManage_billManageRq);
             System.out.println("billManageRs.RQUID=" + _billManage__return.msgRsHdr.getRqUID());
             System.out.println("billManage.statuscode=" + _billManage__return.msgRsHdr.getResponseStatus().statusCode);
             System.out.println("billManage.statusdesc=" + _billManage__return.msgRsHdr.getResponseStatus().getStatusDesc());

@@ -1,4 +1,4 @@
-package com.ejada;
+package org.killbill.billing.plugin.tahseel.cxf.com.ejada;
 
 import java.net.MalformedURLException;
 import java.net.URL;

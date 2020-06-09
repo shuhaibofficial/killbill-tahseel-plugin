@@ -1,4 +1,4 @@
-package com.ejada;
+package org.killbill.billing.plugin.tahseel.cxf.com.ejada;
 
 import javax.jws.WebMethod;
 import javax.jws.WebParam;

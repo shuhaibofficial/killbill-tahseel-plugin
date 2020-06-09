@@ -1,5 +1,5 @@
 
-package com.ejada;
+package org.killbill.billing.plugin.tahseel.cxf.com.ejada;
 
 /**
  * Please modify this class to meet your needs
@@ -50,8 +50,8 @@ public final class BillManage_BillManageSOAP11_Client {
 
         {
         System.out.println("Invoking billManage...");
-        com.ejada.BillManageRqType _billManage_billManageRq = null;
-        com.ejada.BillManageRsType _billManage__return = port.billManage(_billManage_billManageRq);
+        BillManageRqType _billManage_billManageRq = null;
+        BillManageRsType _billManage__return = port.billManage(_billManage_billManageRq);
         System.out.println("billManage.result=" + _billManage__return);
 
 

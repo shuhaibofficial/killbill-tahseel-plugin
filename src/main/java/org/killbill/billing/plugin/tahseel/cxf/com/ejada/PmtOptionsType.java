@@ -1,5 +1,5 @@
 
-package com.ejada;
+package org.killbill.billing.plugin.tahseel.cxf.com.ejada;
 
 import java.math.BigDecimal;
 import javax.xml.bind.annotation.XmlAccessType;
