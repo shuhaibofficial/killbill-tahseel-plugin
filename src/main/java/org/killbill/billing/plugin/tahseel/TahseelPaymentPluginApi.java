@@ -18,10 +18,10 @@
 package org.killbill.billing.plugin.tahseel;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
+import java.sql.SQLException;
+import java.util.*;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.libs.killbill.OSGIKillbillLogService;
 import org.killbill.billing.osgi.libs.killbill.OSGIConfigPropertiesService;
@@ -32,6 +32,7 @@ import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 import org.killbill.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
+import org.killbill.billing.plugin.api.PluginProperties;
 import org.killbill.billing.plugin.api.payment.PluginPaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
@@ -132,6 +133,17 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
 
     @Override
     public void addPaymentMethod(final UUID kbAccountId, final UUID kbPaymentMethodId, final PaymentMethodPlugin paymentMethodProps, final boolean setDefault, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
+        final Iterable<PluginProperty> allProperties = PluginProperties.merge(paymentMethodProps.getProperties(), properties);
+        String objectType = PluginProperties.getValue("object", "payment_method", allProperties);
+        String paymentMethodIdIn = PluginProperties.findPluginPropertyValue("tahseelid", allProperties);
+        final DateTime utcNow = clock.getUTCNow();
+        final Map<String, Object> additionalDataMap = new HashMap<String, Object>();
+        try {
+            dao.addPaymentMethod(kbAccountId, kbPaymentMethodId, additionalDataMap, paymentMethodIdIn, utcNow, context.getTenantId());
+        } catch (final SQLException e) {
+            throw new PaymentPluginApiException("Unable to add payment method", e);
+        }
+
 
     }
 
