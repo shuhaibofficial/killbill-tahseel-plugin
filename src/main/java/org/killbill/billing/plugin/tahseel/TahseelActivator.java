@@ -34,6 +34,9 @@ import org.killbill.billing.plugin.api.notification.PluginConfigurationEventHand
 import org.killbill.billing.plugin.core.config.PluginEnvironmentConfig;
 import org.killbill.billing.plugin.core.resources.jooby.PluginApp;
 import org.killbill.billing.plugin.core.resources.jooby.PluginAppBuilder;
+import org.killbill.billing.plugin.tahseel.dao.TahseelDao;
+import org.killbill.clock.Clock;
+import org.killbill.clock.DefaultClock;
 import org.osgi.framework.BundleContext;
 
 public class TahseelActivator extends KillbillActivatorBase {
@@ -49,19 +52,21 @@ public class TahseelActivator extends KillbillActivatorBase {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
+        final Clock clock = new DefaultClock();
+        final TahseelDao tahseelDao = new TahseelDao(dataSource.getDataSource());
 
         final String region = PluginEnvironmentConfig.getRegion(configProperties.getProperties());
 
         // Register an event listener for plugin configuration (optional)
         tahseelConfigurationHandler = new TahseelConfigurationHandler(region, PLUGIN_NAME, killbillAPI, logService);
-        final Properties globalConfiguration = tahseelConfigurationHandler.createConfigurable(configProperties.getProperties());
-        tahseelConfigurationHandler.setDefaultConfigurable(globalConfiguration);
+        final TahseelConfigProperties tahseelConfigProperties = tahseelConfigurationHandler.createConfigurable(configProperties.getProperties());
+        tahseelConfigurationHandler.setDefaultConfigurable(tahseelConfigProperties);
 
         // Register an event listener (optional)
-        killbillEventHandler = new TahseelListener(killbillAPI);
+        //killbillEventHandler = new TahseelListener(killbillAPI);
 
         // As an example, this plugin registers a PaymentPluginApi (this could be changed to any other plugin api)
-        final PaymentPluginApi paymentPluginApi = new TahseelPaymentPluginApi(configProperties.getProperties(), logService);
+        final PaymentPluginApi paymentPluginApi = new TahseelPaymentPluginApi(killbillAPI, configProperties,logService,clock,tahseelDao);
         registerPaymentPluginApi(context, paymentPluginApi);
 
         // Expose a healthcheck (optional), so other plugins can check on the plugin status
@@ -78,8 +83,8 @@ public class TahseelActivator extends KillbillActivatorBase {
                                                                           .withRouteClass(TahseelHealthcheckServlet.class)
                                                                           .withService(healthcheck)
                                                                           .build();
-        final HttpServlet httpServlet = PluginApp.createServlet(pluginApp);
-        registerServlet(context, httpServlet);
+        final HttpServlet tahseelservlet = PluginApp.createServlet(pluginApp);
+        registerServlet(context, tahseelservlet);
 
         registerHandlers();
     }
@@ -93,8 +98,7 @@ public class TahseelActivator extends KillbillActivatorBase {
     private void registerHandlers() {
         final PluginConfigurationEventHandler configHandler = new PluginConfigurationEventHandler(tahseelConfigurationHandler);
 
-        dispatcher.registerEventHandlers(configHandler,
-                                         (OSGIFrameworkEventHandler) () -> dispatcher.registerEventHandlers(killbillEventHandler));
+        dispatcher.registerEventHandlers(configHandler);
     }
 
     private void registerServlet(final BundleContext context, final Servlet servlet) {

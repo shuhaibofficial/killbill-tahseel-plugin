@@ -24,29 +24,50 @@ import java.util.UUID;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.libs.killbill.OSGIKillbillLogService;
+import org.killbill.billing.osgi.libs.killbill.OSGIConfigPropertiesService;
+import org.killbill.billing.osgi.libs.killbill.OSGIKillbillAPI;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 import org.killbill.billing.payment.plugin.api.PaymentMethodInfoPlugin;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
+import org.killbill.billing.plugin.api.payment.PluginPaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
+import org.killbill.billing.plugin.tahseel.dao.TahseelDao;
+import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelPaymentMethods;
+import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelResponses;
+import org.killbill.billing.plugin.tahseel.dao.gen.tables.records.TahseelPaymentMethodsRecord;
+import org.killbill.billing.plugin.tahseel.dao.gen.tables.records.TahseelResponsesRecord;
+import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 //
 // A 'real' payment plugin would of course implement this interface.
 //
-public class TahseelPaymentPluginApi implements PaymentPluginApi {
+public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResponsesRecord, TahseelResponses, TahseelPaymentMethodsRecord, TahseelPaymentMethods>{
+    private static final Logger logger = LoggerFactory.getLogger(TahseelPaymentPluginApi.class);
+   //private final Properties properties;
 
-    private final Properties properties;
+    public static final String PROPERTY_BILLINGACCT = "billing account";
+    public static final String PROPERTY_AGENCYID= "agency id";
     private final OSGIKillbillLogService logService;
 
-    public TahseelPaymentPluginApi(final Properties properties, final OSGIKillbillLogService logService) {
-        this.properties = properties;
+    private final TahseelDao dao;
+
+    public TahseelPaymentPluginApi(final OSGIKillbillAPI killbillApi,
+                                   final OSGIConfigPropertiesService osgiConfigPropertiesService,
+                                   final OSGIKillbillLogService logService,
+                                   final Clock clock,
+                                   final TahseelDao dao) {
+        super(killbillApi, osgiConfigPropertiesService, logService,clock,dao);
         this.logService = logService;
+        this.dao = dao;
     }
 
     @Override
@@ -76,6 +97,26 @@ public class TahseelPaymentPluginApi implements PaymentPluginApi {
 
     @Override
     public PaymentTransactionInfoPlugin refundPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
+        return null;
+    }
+
+    @Override
+    protected PaymentTransactionInfoPlugin buildPaymentTransactionInfoPlugin(TahseelResponsesRecord record) {
+        return null;
+    }
+
+    @Override
+    protected PaymentMethodPlugin buildPaymentMethodPlugin(TahseelPaymentMethodsRecord record) {
+        return null;
+    }
+
+    @Override
+    protected PaymentMethodInfoPlugin buildPaymentMethodInfoPlugin(TahseelPaymentMethodsRecord record) {
+        return null;
+    }
+
+    @Override
+    protected String getPaymentMethodId(TahseelPaymentMethodsRecord input) {
         return null;
     }
 

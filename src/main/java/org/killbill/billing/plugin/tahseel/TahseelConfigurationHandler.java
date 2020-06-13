@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * }
  * </pre>
  */
-public class TahseelConfigurationHandler extends PluginTenantConfigurableConfigurationHandler<Properties> {
+public class TahseelConfigurationHandler extends PluginTenantConfigurableConfigurationHandler<TahseelConfigProperties> {
 
     private static final Logger logger = LoggerFactory.getLogger(TahseelConfigurationHandler.class);
 
@@ -57,8 +57,8 @@ public class TahseelConfigurationHandler extends PluginTenantConfigurableConfigu
     }
 
     @Override
-    protected Properties createConfigurable(final Properties properties) {
+    protected TahseelConfigProperties createConfigurable(final Properties properties) {
         logger.info("New properties for region {}: {}", region, properties);
-        return properties;
+        return new TahseelConfigProperties(properties,region);
     }
 }

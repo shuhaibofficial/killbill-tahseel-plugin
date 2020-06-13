@@ -24,18 +24,7 @@ public class SoapClientTest {
 
         URL wsdlURL = BillManage_Service.WSDL_LOCATION;
 
-        if (args.length > 0 && args[0] != null && !"".equals(args[0])) {
-            File wsdlFile = new File(args[0]);
-            try {
-                if (wsdlFile.exists()) {
-                    wsdlURL = wsdlFile.toURI().toURL();
-                } else {
-                    wsdlURL = new URL(args[0]);
-                }
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-        }
+
 
         BillManage_Service ss = new BillManage_Service(wsdlURL, SERVICE_NAME);
         BillManage port = ss.getBillManageSOAP12();
