@@ -31,7 +31,6 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 import org.killbill.billing.payment.plugin.api.PaymentMethodInfoPlugin;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.plugin.api.PluginProperties;
 import org.killbill.billing.plugin.api.payment.PluginPaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
@@ -58,16 +57,19 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
     public static final String PROPERTY_BILLINGACCT = "billing account";
     public static final String PROPERTY_AGENCYID= "agency id";
     private final OSGIKillbillLogService logService;
+    private final TahseelConfigurationHandler tahseelConfigurationHandler;
 
     private final TahseelDao dao;
 
-    public TahseelPaymentPluginApi(final OSGIKillbillAPI killbillApi,
+    public TahseelPaymentPluginApi(TahseelConfigurationHandler tahseelConfigurationHandler,
+                                   final OSGIKillbillAPI killbillApi,
                                    final OSGIConfigPropertiesService osgiConfigPropertiesService,
                                    final OSGIKillbillLogService logService,
                                    final Clock clock,
                                    final TahseelDao dao) {
         super(killbillApi, osgiConfigPropertiesService, logService,clock,dao);
         this.logService = logService;
+        this.tahseelConfigurationHandler = tahseelConfigurationHandler;
         this.dao = dao;
     }
 
