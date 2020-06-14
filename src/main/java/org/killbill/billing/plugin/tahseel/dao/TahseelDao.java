@@ -122,6 +122,93 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
     }
 
     // HPP requests
+    public void addGatewayRequest(final UUID kbAccountId,
+                                           final UUID kbPaymentId,
+                                           final UUID kbPaymentTransactionId,
+                                           final String billing_account,
+                                           final String tahseel_rq_uid,
+                                           final DateTime utcNow,
+                                           final UUID kbTenantId) throws SQLException {
+        final Map<String, Object> additionalDataMap = new HashMap<>();
+
+        execute(dataSource.getConnection(),
+                new WithConnectionCallback<Void>() {
+                    @Override
+                    public Void withConnection(final Connection conn) throws SQLException {
+                        DSL.using(conn, dialect, settings)
+                                .insertInto(TAHSEEL_GATEWAY_REQUESTS,
+                                        TAHSEEL_GATEWAY_REQUESTS.KB_ACCOUNT_ID,
+                                        TAHSEEL_GATEWAY_REQUESTS.KB_PAYMENT_ID,
+                                        TAHSEEL_GATEWAY_REQUESTS.KB_PAYMENT_TRANSACTION_ID,
+                                        TAHSEEL_GATEWAY_REQUESTS.TAHSEEL_BILLING_ACCOUNT,
+                                        TAHSEEL_GATEWAY_REQUESTS.TAHSEEL_RQ_UID,
+                                        TAHSEEL_GATEWAY_REQUESTS.ADDITIONAL_DATA,
+                                        TAHSEEL_GATEWAY_REQUESTS.CREATED_DATE,
+                                        TAHSEEL_GATEWAY_REQUESTS.KB_TENANT_ID)
+                                .values(kbAccountId.toString(),
+                                        kbPaymentId == null ? null : kbPaymentId.toString(),
+                                        kbPaymentTransactionId == null ? null : kbPaymentTransactionId.toString(),
+                                        billing_account,
+                                        tahseel_rq_uid,
+                                        asString(additionalDataMap),
+                                        toTimestamp(utcNow),
+                                        kbTenantId.toString())
+                                .execute();
+                        return null;
+                    }
+                });
+    }
+    public TahseelResponsesRecord addResponse(final UUID kbAccountId,
+                                             final UUID kbPaymentId,
+                                             final UUID kbPaymentTransactionId,
+                                             final TransactionType transactionType,
+                                             final BigDecimal amount,
+                                             final Currency currency,
+                                             final String tahseel_billing_account,
+                                             final String tahseel_rq_uid,
+                                             final String status_code,
+                                              final String status_message,
+                                             final DateTime utcNow,
+                                             final UUID kbTenantId) throws SQLException {
+        final Map<String, Object> additionalDataMap = new HashMap<>();//StripePluginProperties.toAdditionalDataMap(stripePaymentIntent);
+
+        return execute(dataSource.getConnection(),
+                new WithConnectionCallback<TahseelResponsesRecord>() {
+                    @Override
+                    public TahseelResponsesRecord withConnection(final Connection conn) throws SQLException {
+                        return DSL.using(conn, dialect, settings)
+                                .insertInto(TAHSEEL_RESPONSES,
+                                        TAHSEEL_RESPONSES.KB_ACCOUNT_ID,
+                                        TAHSEEL_RESPONSES.KB_PAYMENT_ID,
+                                        TAHSEEL_RESPONSES.KB_PAYMENT_TRANSACTION_ID,
+                                        TAHSEEL_RESPONSES.TRANSACTION_TYPE,
+                                        TAHSEEL_RESPONSES.AMOUNT,
+                                        TAHSEEL_RESPONSES.CURRENCY,
+                                        TAHSEEL_RESPONSES.TAHSEEL_BILLING_ACCOUNT,
+                                        TAHSEEL_RESPONSES.TAHSEEL_RQ_UID,
+                                        TAHSEEL_RESPONSES.STATUS_CODE,
+                                        TAHSEEL_RESPONSES.STATUS_MESSAGE,
+                                        TAHSEEL_RESPONSES.ADDITIONAL_DATA,
+                                        TAHSEEL_RESPONSES.CREATED_DATE,
+                                        TAHSEEL_RESPONSES.KB_TENANT_ID)
+                                .values(kbAccountId.toString(),
+                                        kbPaymentId.toString(),
+                                        kbPaymentTransactionId.toString(),
+                                        transactionType.toString(),
+                                        amount,
+                                        currency == null ? null : currency.name(),
+                                        tahseel_billing_account,
+                                        tahseel_rq_uid,
+                                        status_code,
+                                        status_message,
+                                        asString(additionalDataMap),
+                                        toTimestamp(utcNow),
+                                        kbTenantId.toString())
+                                .returning()
+                                .fetchOne();
+                    }
+                });
+    }
 
 
 
