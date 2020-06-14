@@ -23,11 +23,26 @@ import javax.annotation.Nullable;
 
 import org.killbill.billing.osgi.api.Healthcheck;
 import org.killbill.billing.tenant.api.Tenant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TahseelHealthcheck implements Healthcheck {
+    private static final Logger logger = LoggerFactory.getLogger(TahseelHealthcheck.class);
+    private final TahseelConfigurationHandler tahseelConfigurationHandler;
+    public TahseelHealthcheck(TahseelConfigurationHandler tahseelConfigurationHandler) {
+
+        this.tahseelConfigurationHandler = tahseelConfigurationHandler;
+    }
 
     @Override
     public HealthStatus getHealthStatus(@Nullable final Tenant tenant, @Nullable final Map properties) {
-        return HealthStatus.healthy();
+        if (tenant == null) {
+            // The plugin is running
+            return HealthStatus.healthy("Tahseel OK");
+        } else {
+            // Specifying the tenant lets you also validate the tenant configuration
+            final TahseelConfigProperties tahseelConfigProperties = tahseelConfigurationHandler.getConfigurable(tenant.getId());
+            return HealthStatus.healthy("Tahseel OK");
+        }
     }
 }

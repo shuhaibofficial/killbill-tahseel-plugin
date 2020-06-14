@@ -65,8 +65,8 @@ public class TahseelActivator extends KillbillActivatorBase {
         registerPaymentPluginApi(context, paymentPluginApi);
 
         // Expose a healthcheck (optional), so other plugins can check on the plugin status
-        final Healthcheck healthcheck = new TahseelHealthcheck();
-        registerHealthcheck(context, healthcheck);
+        final TahseelHealthcheck tahseelhealthcheck = new TahseelHealthcheck(tahseelConfigurationHandler);
+        registerHealthcheck(context, tahseelhealthcheck);
 
         // Register a servlet (optional)
         final PluginApp pluginApp = new PluginAppBuilder(PLUGIN_NAME,
@@ -76,7 +76,7 @@ public class TahseelActivator extends KillbillActivatorBase {
                                                          super.clock,
                                                          configProperties).withRouteClass(TahseelServlet.class)
                                                                           .withRouteClass(TahseelHealthcheckServlet.class)
-                                                                          .withService(healthcheck)
+                                                                          .withService(tahseelhealthcheck)
                                                                           .build();
         final HttpServlet tahseelservlet = PluginApp.createServlet(pluginApp);
         registerServlet(context, tahseelservlet);
