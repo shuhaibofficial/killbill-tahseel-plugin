@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServlet;
 import org.killbill.billing.osgi.api.Healthcheck;
 import org.killbill.billing.osgi.api.OSGIPluginProperties;
 import org.killbill.billing.osgi.libs.killbill.KillbillActivatorBase;
+import org.killbill.billing.osgi.libs.killbill.OSGIKillbillEventDispatcher;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.plugin.api.notification.PluginConfigurationEventHandler;
 import org.killbill.billing.plugin.core.config.PluginEnvironmentConfig;
@@ -42,7 +43,7 @@ public class TahseelActivator extends KillbillActivatorBase {
     public static final String PLUGIN_NAME = "tahseel-plugin";
 
     private TahseelConfigurationHandler tahseelConfigurationHandler;
-   // private OSGIKillbillEventDispatcher.OSGIKillbillEventHandler killbillEventHandler;
+   private OSGIKillbillEventDispatcher.OSGIKillbillEventHandler killbillEventHandler;
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -57,8 +58,8 @@ public class TahseelActivator extends KillbillActivatorBase {
         final TahseelConfigProperties tahseelConfigProperties = tahseelConfigurationHandler.createConfigurable(configProperties.getProperties());
         tahseelConfigurationHandler.setDefaultConfigurable(tahseelConfigProperties);
 
-        // Register an event listener (optional)
-        //killbillEventHandler = new TahseelListener(killbillAPI);
+       // Register an event listener (optional)
+        killbillEventHandler = new TahseelListener(killbillAPI);
 
         // As an example, this plugin registers a PaymentPluginApi (this could be changed to any other plugin api)
         final PaymentPluginApi paymentPluginApi = new TahseelPaymentPluginApi(tahseelConfigurationHandler,killbillAPI, configProperties,logService,  clock.getClock(),tahseelDao);

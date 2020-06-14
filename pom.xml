@@ -22,12 +22,12 @@
     <parent>
         <artifactId>killbill-oss-parent</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.142.6</version>
+        <version>0.143.55</version>
     </parent>
     <groupId>org.kill-bill.billing.plugin.java</groupId>
     <artifactId>tahseel-plugin</artifactId>
     <name>Kill Bill OSGI Tahseel bundle</name>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.4-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <description>Kill Bill Purchase Tahseel plugin</description>
     <url>https://github.com/shuhaibofficial/killbill-tahseel-plugin</url>
@@ -229,6 +229,8 @@
                             org.killbill.billing.tenant.api;
                             org.killbill.billing.usage.api;
                             org.killbill.billing.util.api;
+                            org.killbill.billing.util.audit;
+                            org.killbill.billing.util.entity;
                             org.killbill.billing.currency.plugin.api;
                             org.killbill.billing.currency.api;
                             org.killbill.billing.security.api;
@@ -389,6 +391,14 @@
                             <filters>
                                 <filter>
                                     <artifact>${project.groupId}:${project.artifactId}</artifact>
+                                </filter>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                    <exclude>META-INF/*.SF</exclude>
+                                    <exclude>META-INF/*.DSA</exclude>
+                                    <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
                                 </filter>
                             </filters>
                         </configuration>
