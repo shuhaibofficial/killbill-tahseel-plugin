@@ -36,7 +36,7 @@ public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactio
                 transactionType,
                 amount,
                 Currency.valueOf(currency),
-                PaymentPluginStatus.ERROR,
+                PaymentPluginStatus.PENDING,
                 gatewayError,
                 gatewayErrorCode,
                 null,
@@ -47,15 +47,15 @@ public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactio
     }
 
     public TahseelPaymentTransactionInfoPlugin(final UUID kbPaymentId, final UUID kbTransactionPaymentPaymentId,
-                                              final TransactionType transactionType,
-                                              final BigDecimal amount, final String currency,
-                                              final List<PluginProperty> properties) {
+                                               final TransactionType transactionType,
+                                               final BigDecimal amount, PaymentPluginStatus pending, String status_code, String status_message, final String currency,
+                                               final List<PluginProperty> properties, DateTime dateTime, DateTime now, Iterable<PluginProperty> pluginProperties) {
         super(kbPaymentId,
                 kbTransactionPaymentPaymentId,
                 transactionType,
                 amount,
                 Currency.valueOf(currency),
-                PaymentPluginStatus.CANCELED,
+                PaymentPluginStatus.PENDING,
                 "Not supported",
                 null,
                 null,

@@ -28,11 +28,13 @@ import javax.annotation.Nullable;
 import javax.sql.DataSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.MoreObjects;
 import org.joda.time.DateTime;
 import org.jooq.impl.DSL;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.plugin.api.PluginProperties;
 import org.killbill.billing.plugin.dao.payment.PluginPaymentDao;
 
@@ -44,6 +46,7 @@ import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelResponses;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.records.TahseelGatewayRequestsRecord;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.records.TahseelPaymentMethodsRecord;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.records.TahseelResponsesRecord;
+import org.killbill.billing.util.callcontext.TenantContext;
 
 
 import static org.killbill.billing.plugin.tahseel.dao.gen.Tables.*;
@@ -165,7 +168,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                                              final BigDecimal amount,
                                              final Currency currency,
                                              final String tahseel_billing_account,
-                                             final String tahseel_rq_uid,
+                                             final UUID tahseel_rq_uid,
                                              final String status_code,
                                               final String status_message,
                                              final DateTime utcNow,
@@ -198,7 +201,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                                         amount,
                                         currency == null ? null : currency.name(),
                                         tahseel_billing_account,
-                                        tahseel_rq_uid,
+                                        tahseel_rq_uid.toString(),
                                         status_code,
                                         status_message,
                                         asString(additionalDataMap),
@@ -209,6 +212,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                     }
                 });
     }
+
 
 
 

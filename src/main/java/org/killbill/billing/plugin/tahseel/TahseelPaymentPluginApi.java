@@ -21,20 +21,19 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.*;
 
+import com.google.common.base.MoreObjects;
 import org.joda.time.DateTime;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.osgi.libs.killbill.OSGIKillbillLogService;
 import org.killbill.billing.osgi.libs.killbill.OSGIConfigPropertiesService;
 import org.killbill.billing.osgi.libs.killbill.OSGIKillbillAPI;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.plugin.api.GatewayNotification;
-import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
-import org.killbill.billing.payment.plugin.api.PaymentMethodInfoPlugin;
+import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.plugin.api.*;
 import org.killbill.billing.plugin.api.PluginProperties;
 import org.killbill.billing.plugin.api.payment.PluginPaymentPluginApi;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
-import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
@@ -46,6 +45,8 @@ import org.killbill.billing.plugin.tahseel.dao.gen.tables.records.TahseelRespons
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
 
 //
 // A 'real' payment plugin would of course implement this interface.
@@ -85,7 +86,21 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
 
     @Override
     public PaymentTransactionInfoPlugin purchasePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
-        return null;
+       // final TahseelResponsesRecord tahseelResponsesRecord;
+       // try {
+         //   tahseelResponsesRecord = dao.updateResponse(kbTransactionId, properties, context.getTenantId());
+        //} catch (final SQLException e) {
+         //   throw new PaymentPluginApiException("HPP notification came through, but we encountered a database error", e);
+        //}
+
+            final String Status="SUCCESS";
+            return executeInitialTransaction(TransactionType.PURCHASE,Status, kbAccountId, kbPaymentId, kbTransactionId, kbPaymentMethodId, amount, currency, properties, context);
+
+            // We already have a record for that payment transaction and we just updated the response row with additional properties
+            // (the API can be called for instance after the user is redirected back from the HPP)
+
+
+
     }
 
     @Override
@@ -187,5 +202,56 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
     @Override
     public GatewayNotification processNotification(final String notification, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
         return null;
+    }
+    private PaymentTransactionInfoPlugin executeInitialTransaction(final TransactionType transactionType,
+                                                                   final String status,
+                                                                   final UUID kbAccountId,
+                                                                   final UUID kbPaymentId,
+                                                                   final UUID kbTransactionId,
+                                                                   final UUID kbPaymentMethodId,
+                                                                   final BigDecimal amount,
+                                                                   final Currency currency,
+                                                                   final Iterable<PluginProperty> properties,
+                                                                   final CallContext context) throws PaymentPluginApiException {
+        final Account account = getAccount(kbAccountId, context);
+        final TahseelPaymentMethodsRecord PaymentMethod = getTahseelPaymentMethod(kbPaymentMethodId, context);
+        final DateTime utcNow = clock.getUTCNow();
+        final long number = (long) Math.floor(Math.random() * 9_000_000_000L) + 1_000_000_000L;
+        final String tahseel_billing_aacount = String.valueOf(number);
+        final UUID tahseel_rq_uid = UUID.randomUUID();
+        final String status_code = "I000000";
+        final String status_message = "SUCCESS";
+
+        try {
+            final TahseelResponsesRecord responsesRecord = dao.addResponse(kbAccountId, kbPaymentId, kbTransactionId, transactionType, amount, currency,tahseel_billing_aacount, tahseel_rq_uid,status_code,status_message, utcNow, context.getTenantId());
+            return new TahseelPaymentTransactionInfoPlugin(
+                    kbAccountId,
+                    kbTransactionId,
+                    transactionType,
+                    amount,
+                    PaymentPluginStatus.PENDING,
+                    status_code,
+                    status_message,
+                    null,
+                    null,
+                    DateTime.now(),
+                    DateTime.now(),
+                    properties);
+        } catch (final SQLException e) {
+            throw new PaymentPluginApiException("Payment went through, but we encountered a database error. Payment details: ", e);
+        }
+    }
+    private TahseelPaymentMethodsRecord getTahseelPaymentMethod(UUID kbPaymentMethodId, CallContext context) throws PaymentPluginApiException {
+        TahseelPaymentMethodsRecord paymentMethod = null;
+        try {
+            paymentMethod = dao.getPaymentMethod(kbPaymentMethodId, context.getTenantId());
+        } catch (SQLException e) {
+            throw new PaymentPluginApiException("There was an error trying to load Dwolla payment method for KillBill payment method " + kbPaymentMethodId, e);
+        }
+
+        if (paymentMethod == null) {
+            throw new PaymentPluginApiException(null, "No Dwolla payment method was found for killbill payment method " + kbPaymentMethodId);
+        }
+        return paymentMethod;
     }
 }
