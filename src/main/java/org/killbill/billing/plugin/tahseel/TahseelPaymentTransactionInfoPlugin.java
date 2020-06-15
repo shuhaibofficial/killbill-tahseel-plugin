@@ -1,10 +1,7 @@
 package org.killbill.billing.plugin.tahseel;
 
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import javax.annotation.Nullable;
 
@@ -63,6 +60,23 @@ public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactio
                 DateTime.now(),
                 DateTime.now(),
                 properties);
+    }
+
+
+    public TahseelPaymentTransactionInfoPlugin(TahseelResponsesRecord record) {
+        super(UUID.fromString(record.getKbPaymentId()),
+                UUID.fromString(record.getKbPaymentTransactionId()),
+                TransactionType.valueOf(record.getTransactionType()),
+                record.getAmount(),
+                Strings.isNullOrEmpty(record.getCurrency()) ? null : Currency.valueOf(record.getCurrency()),
+                PaymentPluginStatus.PENDING,
+                record.getStatusCode(),
+                record.getStatusMessage(),
+                record.getTahseelBillingAccount(),
+                null,
+                new DateTime(record.getCreatedDate(), DateTimeZone.UTC),
+                new DateTime(record.getCreatedDate(), DateTimeZone.UTC),
+                TahseelModelPluginBase.buildPluginProperties(record.getAdditionalData()));
     }
 
 

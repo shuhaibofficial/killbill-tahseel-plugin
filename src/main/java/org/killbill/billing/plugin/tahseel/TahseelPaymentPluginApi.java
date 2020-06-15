@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -120,22 +121,23 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
 
     @Override
     protected PaymentTransactionInfoPlugin buildPaymentTransactionInfoPlugin(TahseelResponsesRecord record) {
-        return null;
+        return new TahseelPaymentTransactionInfoPlugin(record);
     }
 
     @Override
     protected PaymentMethodPlugin buildPaymentMethodPlugin(TahseelPaymentMethodsRecord record) {
-        return null;
+        return new TahseelPaymentMethodPlugin(record);
     }
 
     @Override
     protected PaymentMethodInfoPlugin buildPaymentMethodInfoPlugin(TahseelPaymentMethodsRecord record) {
-        return null;
+        return new TahseelPaymentMethodInfoPlugin(record);
     }
 
     @Override
     protected String getPaymentMethodId(TahseelPaymentMethodsRecord input) {
-        return null;
+
+        return input.getKbPaymentMethodId();
     }
 
     @Override
