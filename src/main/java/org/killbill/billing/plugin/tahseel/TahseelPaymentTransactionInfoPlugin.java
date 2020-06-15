@@ -11,7 +11,9 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.plugin.api.PluginProperties;
 import org.killbill.billing.plugin.api.payment.PluginPaymentTransactionInfoPlugin;
+import org.killbill.billing.plugin.tahseel.dao.TahseelDao;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.records.TahseelResponsesRecord;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 
 public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactionInfoPlugin {
+
 
 
 
@@ -77,6 +80,22 @@ public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactio
                 new DateTime(record.getCreatedDate(), DateTimeZone.UTC),
                 new DateTime(record.getCreatedDate(), DateTimeZone.UTC),
                 TahseelModelPluginBase.buildPluginProperties(record.getAdditionalData()));
+    }
+    private static PaymentPluginStatus getPaymentPluginStatus(final String status_code) {
+
+
+        if ("processed".equals(status_code)) {
+            return PaymentPluginStatus.PROCESSED;
+        } else if ("I000000".equals(status_code)) {
+            // Untestable - see https://stripe.com/docs/ach#ach-payments-workflow
+            return PaymentPluginStatus.PENDING;
+        }
+         else if ("failed".equals(status_code)) {
+            // TODO Do better (look at the type of error to narrow down on CANCELED)!
+            return PaymentPluginStatus.ERROR;
+        } else {
+            return PaymentPluginStatus.UNDEFINED;
+        }
     }
 
 

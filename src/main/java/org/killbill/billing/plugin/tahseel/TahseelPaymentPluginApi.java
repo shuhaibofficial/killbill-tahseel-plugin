@@ -142,7 +142,12 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
 
     @Override
     public List<PaymentTransactionInfoPlugin> getPaymentInfo(final UUID kbAccountId, final UUID kbPaymentId, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentPluginApiException {
-        return null;
+        final List<PaymentTransactionInfoPlugin> transactions = super.getPaymentInfo(kbAccountId, kbPaymentId, properties, context);
+        if (transactions.isEmpty()) {
+            // We don't know about this payment (maybe it was aborted in a control plugin)
+            return transactions;
+        }
+        return transactions;
     }
 
     @Override
