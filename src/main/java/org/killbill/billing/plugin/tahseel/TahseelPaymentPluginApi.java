@@ -35,6 +35,8 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.*;
 import org.killbill.billing.plugin.api.PluginProperties;
 import org.killbill.billing.plugin.api.payment.PluginPaymentPluginApi;
+import org.killbill.billing.plugin.tahseel.cxf.com.ejada.BillManageRsType;
+import org.killbill.billing.plugin.tahseel.cxf.com.ejada.SoapClientTest;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
@@ -48,6 +50,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+
+import static org.killbill.billing.plugin.tahseel.TahseelPaymentTransactionInfoPlugin.getPaymentPluginStatus;
 
 //
 // A 'real' payment plugin would of course implement this interface.
@@ -226,8 +230,17 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
         final long number = (long) Math.floor(Math.random() * 9_000_000_000L) + 1_000_000_000L;
         final String tahseel_billing_aacount = String.valueOf(number);
         final UUID tahseel_rq_uid = UUID.randomUUID();
-        final String status_code = "I000000";
-        final String status_message = "SUCCESS";
+        String status_code = "E999999";
+        String status_message = "Unrecoverable integration error default";
+        try{
+            SoapClientTest soapCall = new SoapClientTest();
+            BillManageRsType soapResponse=soapCall.callSoapService();
+            status_code = soapResponse.getMsgRsHdr().getResponseStatus().getStatusCode();
+            status_message = soapResponse.getMsgRsHdr().getResponseStatus().getStatusDesc();
+        }
+        catch (final Exception e) {
+            throw new PaymentPluginApiException("WS service Errror ", e);
+        }
 
         try {
             final TahseelResponsesRecord responsesRecord = dao.addResponse(kbAccountId, kbPaymentId, kbTransactionId, transactionType, amount, currency,tahseel_billing_aacount, tahseel_rq_uid,status_code,status_message, utcNow, context.getTenantId());
@@ -236,7 +249,7 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
                     kbTransactionId,
                     transactionType,
                     amount,
-                    PaymentPluginStatus.PENDING,
+                    getPaymentPluginStatus(status_code),
                     status_code,
                     status_message,
                     null,

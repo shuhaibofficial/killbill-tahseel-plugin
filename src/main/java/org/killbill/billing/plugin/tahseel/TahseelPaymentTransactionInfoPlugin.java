@@ -55,7 +55,7 @@ public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactio
                 transactionType,
                 amount,
                 Currency.valueOf(currency),
-                PaymentPluginStatus.PENDING,
+                PaymentPluginStatus.ERROR,
                 "Not supported",
                 null,
                 null,
@@ -72,7 +72,7 @@ public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactio
                 TransactionType.valueOf(record.getTransactionType()),
                 record.getAmount(),
                 Strings.isNullOrEmpty(record.getCurrency()) ? null : Currency.valueOf(record.getCurrency()),
-                PaymentPluginStatus.PENDING,
+                getPaymentPluginStatus(record.getStatusCode()),
                 record.getStatusCode(),
                 record.getStatusMessage(),
                 record.getTahseelBillingAccount(),
@@ -81,7 +81,7 @@ public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactio
                 new DateTime(record.getCreatedDate(), DateTimeZone.UTC),
                 TahseelModelPluginBase.buildPluginProperties(record.getAdditionalData()));
     }
-    private static PaymentPluginStatus getPaymentPluginStatus(final String status_code) {
+    protected static PaymentPluginStatus getPaymentPluginStatus(final String status_code) {
 
 
         if ("processed".equals(status_code)) {
@@ -90,7 +90,7 @@ public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactio
             // Untestable - see https://stripe.com/docs/ach#ach-payments-workflow
             return PaymentPluginStatus.PENDING;
         }
-         else if ("failed".equals(status_code)) {
+         else if (status_code.startsWith("E")) {
             // TODO Do better (look at the type of error to narrow down on CANCELED)!
             return PaymentPluginStatus.ERROR;
         } else {
