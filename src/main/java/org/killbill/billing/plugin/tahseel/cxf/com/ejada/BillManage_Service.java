@@ -32,7 +32,7 @@ public class BillManage_Service extends Service {
                 .log(java.util.logging.Level.INFO,
                      "Can not initialize the default wsdl from {0}", "classpath:wsdl/BillManage.wsdl");
             try {
-                url = new URL("http://localhost:7800/BillManage?WSDL");
+                url = new URL("http://host.docker.internal:7800/BillManage?WSDL");
                 java.util.logging.Logger.getLogger(url.toString())
                         .log(java.util.logging.Level.INFO,
                                 "Loading WSDl FROM URL s {0}", "External URL WSDL LOAD");

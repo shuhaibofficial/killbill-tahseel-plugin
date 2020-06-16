@@ -1,6 +1,8 @@
 package org.killbill.billing.plugin.tahseel.cxf.com.ejada;
 
 
+import org.killbill.billing.plugin.tahseel.cxf.com.ejada.*;
+
 import java.io.File;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -20,7 +22,7 @@ public class SoapClientTest {
     private SoapClientTest() {
     }
 
-    public static void main(String[] args) throws java.lang.Exception {
+
 
         URL wsdlURL = BillManage_Service.WSDL_LOCATION;
 
@@ -95,8 +97,8 @@ public class SoapClientTest {
             System.out.println("billManage.statusdesc=" + _billManage__return.msgRsHdr.getResponseStatus().getStatusDesc());
 
 
-        }
 
-        System.exit(0);
+
+
     }
 }
