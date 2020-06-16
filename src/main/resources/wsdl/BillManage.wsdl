@@ -44,7 +44,7 @@
 	</wsdl:binding>
 	<wsdl:service name="BillManage">
 		<wsdl:port name="BillManageSOAP12" binding="ns:BillManageSOAP12">
-			<soap12:address location="http://localhost:7800/BillManage"/>
+			<soap12:address location="http://192.168.65.2:7800/BillManage"/>
 		</wsdl:port>
 		<wsdl:port name="BillManageSOAP11" binding="ns:BillManageSOAP11">
 			<soap:address location="http://localhost:7800/BillManage11"/>
