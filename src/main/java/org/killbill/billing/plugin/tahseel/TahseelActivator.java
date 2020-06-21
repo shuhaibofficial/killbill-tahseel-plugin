@@ -33,6 +33,8 @@ import org.killbill.billing.plugin.core.config.PluginEnvironmentConfig;
 import org.killbill.billing.plugin.core.resources.jooby.PluginApp;
 import org.killbill.billing.plugin.core.resources.jooby.PluginAppBuilder;
 import org.killbill.billing.plugin.tahseel.dao.TahseelDao;
+import org.killbill.clock.Clock;
+import org.killbill.clock.DefaultClock;
 import org.osgi.framework.BundleContext;
 
 public class TahseelActivator extends KillbillActivatorBase {
@@ -48,10 +50,12 @@ public class TahseelActivator extends KillbillActivatorBase {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
-        //final Clock clock = new DefaultClock();
+        final Clock clock = new DefaultClock();
         final TahseelDao tahseelDao = new TahseelDao(dataSource.getDataSource());
 
         final String region = PluginEnvironmentConfig.getRegion(configProperties.getProperties());
+
+        final TahseelNotificationHandler notificationHandler = new TahseelNotificationHandler(tahseelDao, killbillAPI, clock);
 
         // Register an event listener for plugin configuration (optional)
         tahseelConfigurationHandler = new TahseelConfigurationHandler(region, PLUGIN_NAME, killbillAPI, logService);
@@ -62,7 +66,7 @@ public class TahseelActivator extends KillbillActivatorBase {
         killbillEventHandler = new TahseelListener(killbillAPI);
 
         // As an example, this plugin registers a PaymentPluginApi (this could be changed to any other plugin api)
-        final PaymentPluginApi paymentPluginApi = new TahseelPaymentPluginApi(tahseelConfigurationHandler,killbillAPI, configProperties,logService,  clock.getClock(),tahseelDao);
+        final PaymentPluginApi paymentPluginApi = new TahseelPaymentPluginApi(tahseelConfigurationHandler,killbillAPI, configProperties,logService,  clock,tahseelDao,notificationHandler);
         registerPaymentPluginApi(context, paymentPluginApi);
 
         // Expose a healthcheck (optional), so other plugins can check on the plugin status

@@ -21,8 +21,6 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.*;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Lists;
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -49,8 +47,6 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-
 import static org.killbill.billing.plugin.tahseel.TahseelPaymentTransactionInfoPlugin.getPaymentPluginStatus;
 
 //
@@ -64,7 +60,7 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
     public static final String PROPERTY_AGENCYID= "agency id";
     private final OSGIKillbillLogService logService;
     private final TahseelConfigurationHandler tahseelConfigurationHandler;
-
+    private final TahseelNotificationHandler notificationHandler;
     private final TahseelDao dao;
 
     public TahseelPaymentPluginApi(TahseelConfigurationHandler tahseelConfigurationHandler,
@@ -72,11 +68,12 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
                                    final OSGIConfigPropertiesService osgiConfigPropertiesService,
                                    final OSGIKillbillLogService logService,
                                    final Clock clock,
-                                   final TahseelDao dao) {
+                                   final TahseelDao dao, TahseelNotificationHandler notificationHandler) {
         super(killbillApi, osgiConfigPropertiesService, logService,clock,dao);
         this.logService = logService;
         this.tahseelConfigurationHandler = tahseelConfigurationHandler;
         this.dao = dao;
+        this.notificationHandler = notificationHandler;
     }
 
     @Override
@@ -165,7 +162,7 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
         String objectType = PluginProperties.getValue("object", "payment_method", allProperties);
         String paymentMethodIdIn = PluginProperties.findPluginPropertyValue("tahseelid", allProperties);
         final DateTime utcNow = clock.getUTCNow();
-        final Map<String, Object> additionalDataMap = new HashMap<String, Object>();
+        final Map<String, Object> additionalDataMap = new HashMap<>();
         try {
             dao.addPaymentMethod(kbAccountId, kbPaymentMethodId, additionalDataMap, paymentMethodIdIn, utcNow, context.getTenantId());
         } catch (final SQLException e) {
