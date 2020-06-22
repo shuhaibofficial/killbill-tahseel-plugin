@@ -7,6 +7,7 @@ package org.killbill.billing.plugin.tahseel.dao.gen;
 import javax.annotation.Generated;
 
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelGatewayRequests;
+import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelNotifications;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelPaymentMethods;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelResponses;
 
@@ -28,6 +29,11 @@ public class Tables {
      * The table <code>killbill.tahseel_gateway_requests</code>.
      */
     public static final TahseelGatewayRequests TAHSEEL_GATEWAY_REQUESTS = org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelGatewayRequests.TAHSEEL_GATEWAY_REQUESTS;
+
+    /**
+     * The table <code>killbill.tahseel_notifications</code>.
+     */
+    public static final TahseelNotifications TAHSEEL_NOTIFICATIONS = org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelNotifications.TAHSEEL_NOTIFICATIONS;
 
     /**
      * The table <code>killbill.tahseel_payment_methods</code>.

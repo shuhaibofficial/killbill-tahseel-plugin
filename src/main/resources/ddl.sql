@@ -52,3 +52,28 @@ create table tahseel_payment_methods (
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 create unique index tahseel_payment_methods_kb_payment_id on tahseel_payment_methods(kb_payment_method_id);
 create index tahseel_payment_methods_tahseel_id on tahseel_payment_methods(tahseel_id);
+
+drop table if exists tahseel_notifications;
+create table tahseel_notifications (
+  record_id serial
+, kb_account_id char(36)
+, kb_payment_id char(36)
+, kb_payment_transaction_id char(36)
+, transaction_type varchar(32)
+, amount numeric(15,9)
+, currency char(3)
+, payment_status_code varchar(32)
+, payment_date datetime
+, tahseel_billing_account varchar(32)
+, merchant_reference varchar(64)
+, original_reference varchar(64)
+, payment_method varchar(32)
+, additional_data longtext default null
+, created_date datetime not null
+, kb_tenant_id char(36)
+, primary key(record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+-- Not unique to handle retries
+create index tahseel_notifications_tahseel_billing_account on tahseel_notifications(tahseel_billing_account);
+create index tahseel_notifications_kb_payment_id on tahseel_notifications(kb_payment_id);
+create index tahseel_notifications_kb_payment_transaction_id on tahseel_notifications(kb_payment_transaction_id);

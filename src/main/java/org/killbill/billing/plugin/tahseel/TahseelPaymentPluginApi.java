@@ -17,6 +17,7 @@
 
 package org.killbill.billing.plugin.tahseel;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.*;
@@ -209,7 +210,12 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
 
     @Override
     public GatewayNotification processNotification(final String notification, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
-        return null;
+        try {
+            notificationHandler.processNotification(notification, context.getTenantId());
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+        }
+        return new TahseelGatewayNotification(notification);
     }
     private PaymentTransactionInfoPlugin executeInitialTransaction(final TransactionType transactionType,
                                                                    final String status,

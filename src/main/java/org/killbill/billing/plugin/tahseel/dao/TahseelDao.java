@@ -27,9 +27,15 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.MoreObjects;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeUtils;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.jooq.Configuration;
+import org.jooq.TransactionalRunnable;
 import org.jooq.impl.DSL;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -41,6 +47,8 @@ import org.killbill.billing.plugin.dao.payment.PluginPaymentDao;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.ImmutableMap;
 
+import org.killbill.billing.plugin.tahseel.JsonHelper;
+import org.killbill.billing.plugin.tahseel.client.model.Item;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelPaymentMethods;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelResponses;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.records.TahseelGatewayRequestsRecord;
@@ -212,6 +220,111 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                     }
                 });
     }
+    public void addNotification(final Item item,
+                                @Nullable final UUID kbAccountId,
+                                @Nullable final UUID kbPaymentId,
+                                @Nullable final UUID kbPaymentTransactionId,
+                                @Nullable final TransactionType transactionType,
+                                final DateTime utcNow,
+                                final UUID tenantId) throws SQLException {
+
+        //final String self = item.getLinks().get(DwollaPaymentPluginApi.SELF).getHref();
+        Map<String, String> additionalData = new HashMap<String, String>();
+        DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        execute(dataSource.getConnection(),
+                new WithConnectionCallback<Void>() {
+                    @Override
+                    public Void withConnection(final Connection conn) throws SQLException {
+                        DSL.using(conn, dialect, settings)
+                                .insertInto(TAHSEEL_NOTIFICATIONS,
+                                        TAHSEEL_NOTIFICATIONS.KB_ACCOUNT_ID,
+                                        TAHSEEL_NOTIFICATIONS.KB_PAYMENT_ID,
+                                        TAHSEEL_NOTIFICATIONS.KB_PAYMENT_TRANSACTION_ID,
+                                        TAHSEEL_NOTIFICATIONS.TRANSACTION_TYPE,
+                                        TAHSEEL_NOTIFICATIONS.AMOUNT,
+                                        TAHSEEL_NOTIFICATIONS.CURRENCY,
+                                        TAHSEEL_NOTIFICATIONS.PAYMENT_STATUS_CODE,
+                                        TAHSEEL_NOTIFICATIONS.PAYMENT_DATE,
+                                        TAHSEEL_NOTIFICATIONS.TAHSEEL_BILLING_ACCOUNT,
+                                       // TAHSEEL_NOTIFICATIONS.MERCHANT_REFERENCE,
+                                        //TAHSEEL_NOTIFICATIONS.ORIGINAL_REFERENCE,
+                                        TAHSEEL_NOTIFICATIONS.PAYMENT_METHOD,
+                                        TAHSEEL_NOTIFICATIONS.ADDITIONAL_DATA,
+                                        TAHSEEL_NOTIFICATIONS.CREATED_DATE,
+                                        TAHSEEL_NOTIFICATIONS.KB_TENANT_ID)
+                                .values(kbAccountId.toString(),
+                                        kbPaymentId.toString(),
+                                        kbPaymentTransactionId.toString(),
+                                        transactionType.toString(),
+                                        BigDecimal.valueOf(item.getPaymentAmount()),
+                                        "SAR",
+                                        item.getPaymentStatusCode(),
+                                        toTimestamp(formatter.parseDateTime(item.getPaymentDate())),
+                                        item.getBillAccount(),
+                                        item.getPaymentMethod().toString(),
+                                        getAdditionalData(item),
+                                        toTimestamp(utcNow),
+                                        tenantId.toString())
+                                .execute();
+                        return null;
+                    }
+                });
+    }
+    public TahseelResponsesRecord getResponseByBillingAccount(final String tahseel_billing_account) throws SQLException {
+        return execute(dataSource.getConnection(),
+                new WithConnectionCallback<TahseelResponsesRecord>() {
+                    @Override
+                    public TahseelResponsesRecord withConnection(final Connection conn) throws SQLException {
+                        return DSL.using(conn, dialect, settings)
+                                .selectFrom(TAHSEEL_RESPONSES)
+                                .where(TAHSEEL_RESPONSES.TAHSEEL_BILLING_ACCOUNT.equal(tahseel_billing_account))
+                                .orderBy(TAHSEEL_RESPONSES.RECORD_ID.desc())
+                                // Can have multiple entries for the same billing account
+                                .limit(1)
+                                .fetchOne();
+                    }
+                });
+    }
+    public void updateResponseStatus(final String newStatus, final String tahseel_billing_acct, final UUID tenantId) throws SQLException {
+        execute(dataSource.getConnection(),
+                new WithConnectionCallback<Void>() {
+                    @Override
+                    public Void withConnection(final Connection conn) throws SQLException {
+                        DSL.using(conn, dialect, settings)
+                                .transaction(new TransactionalRunnable() {
+                                    @Override
+                                    public void run(final Configuration configuration) throws Exception {
+                                        DSL.using(conn, dialect, settings)
+                                                .update(TAHSEEL_RESPONSES)
+                                                .set(TAHSEEL_RESPONSES.STATUS_CODE, newStatus)
+                                                .where(TAHSEEL_RESPONSES.KB_TENANT_ID.equal(tenantId.toString()))
+                                                .and(TAHSEEL_RESPONSES.TAHSEEL_BILLING_ACCOUNT.equal(tahseel_billing_acct))
+                                                .execute();
+                                    }
+                                });
+                        return null;
+                    }
+                });
+    }
+
+    private String getAdditionalData(final Item item) throws SQLException {
+        Map<String, String> additionalData = new HashMap<String, String>();
+        try {
+            additionalData.put("AgencyCode", objectMapper.writeValueAsString(item.getAgencyCode()));
+            additionalData.put("IntermediatePaymentId", objectMapper.writeValueAsString(item.getIntermediatePaymentId()));
+            additionalData.put("BillCategory", objectMapper.writeValueAsString(item.getBillCategory()));
+            additionalData.put("BillAccount", objectMapper.writeValueAsString(item.getBillAccount()));
+            additionalData.put("PaymentAmount", objectMapper.writeValueAsString(item.getPaymentAmount()));
+            additionalData.put("PaymentDate", objectMapper.writeValueAsString(item.getPaymentDate()));
+            additionalData.put("PaymentMethod", objectMapper.writeValueAsString(item.getPaymentMethod()));
+            additionalData.put("PaymentStatusCode", objectMapper.writeValueAsString(item.getPaymentStatusCode()));
+            additionalData.put("PaymentReferenceInfo", objectMapper.writeValueAsString(item.getPaymentReferenceInfo()));
+            return objectMapper.writeValueAsString(additionalData);
+        } catch (final JsonProcessingException e) {
+            throw new SQLException(e.getMessage());
+        }
+    }
+
 
 
 

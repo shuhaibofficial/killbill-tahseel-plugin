@@ -14,6 +14,7 @@ import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelGatewayRequests;
+import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelNotifications;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelPaymentMethods;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelResponses;
 
@@ -31,7 +32,7 @@ import org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelResponses;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Killbill extends SchemaImpl {
 
-    private static final long serialVersionUID = 1790734519;
+    private static final long serialVersionUID = 1957536035;
 
     /**
      * The reference instance of <code>killbill</code>
@@ -42,6 +43,11 @@ public class Killbill extends SchemaImpl {
      * The table <code>killbill.tahseel_gateway_requests</code>.
      */
     public final TahseelGatewayRequests TAHSEEL_GATEWAY_REQUESTS = org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelGatewayRequests.TAHSEEL_GATEWAY_REQUESTS;
+
+    /**
+     * The table <code>killbill.tahseel_notifications</code>.
+     */
+    public final TahseelNotifications TAHSEEL_NOTIFICATIONS = org.killbill.billing.plugin.tahseel.dao.gen.tables.TahseelNotifications.TAHSEEL_NOTIFICATIONS;
 
     /**
      * The table <code>killbill.tahseel_payment_methods</code>.
@@ -79,6 +85,7 @@ public class Killbill extends SchemaImpl {
     private final List<Table<?>> getTables0() {
         return Arrays.<Table<?>>asList(
             TahseelGatewayRequests.TAHSEEL_GATEWAY_REQUESTS,
+            TahseelNotifications.TAHSEEL_NOTIFICATIONS,
             TahseelPaymentMethods.TAHSEEL_PAYMENT_METHODS,
             TahseelResponses.TAHSEEL_RESPONSES);
     }
