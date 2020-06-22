@@ -265,7 +265,7 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
         }
     }
     private TahseelPaymentMethodsRecord getTahseelPaymentMethod(UUID kbPaymentMethodId, CallContext context) throws PaymentPluginApiException {
-        TahseelPaymentMethodsRecord paymentMethod = null;
+        TahseelPaymentMethodsRecord paymentMethod;
         try {
             paymentMethod = dao.getPaymentMethod(kbPaymentMethodId, context.getTenantId());
         } catch (SQLException e) {
