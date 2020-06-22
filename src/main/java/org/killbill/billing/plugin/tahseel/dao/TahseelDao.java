@@ -256,12 +256,12 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                                         kbPaymentId.toString(),
                                         kbPaymentTransactionId.toString(),
                                         transactionType.toString(),
-                                        BigDecimal.valueOf(item.getPaymentAmount()),
+                                        new BigDecimal(item.get("PaymentAmount").toString()),
                                         "SAR",
-                                        item.getPaymentStatusCode(),
-                                        toTimestamp(formatter.parseDateTime(item.getPaymentDate())),
-                                        item.getBillAccount(),
-                                        item.getPaymentMethod().toString(),
+                                        item.get("PaymentStatusCode").toString(),
+                                        toTimestamp(formatter.parseDateTime(item.get("PaymentDate").toString())),
+                                        item.get("BillAccount").toString(),
+                                        item.get("PaymentMethod").toString(),
                                         getAdditionalData(item),
                                         toTimestamp(utcNow),
                                         tenantId.toString())
@@ -310,15 +310,15 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
     private String getAdditionalData(final Item item) throws SQLException {
         Map<String, String> additionalData = new HashMap<String, String>();
         try {
-            additionalData.put("AgencyCode", objectMapper.writeValueAsString(item.getAgencyCode()));
-            additionalData.put("IntermediatePaymentId", objectMapper.writeValueAsString(item.getIntermediatePaymentId()));
-            additionalData.put("BillCategory", objectMapper.writeValueAsString(item.getBillCategory()));
-            additionalData.put("BillAccount", objectMapper.writeValueAsString(item.getBillAccount()));
-            additionalData.put("PaymentAmount", objectMapper.writeValueAsString(item.getPaymentAmount()));
-            additionalData.put("PaymentDate", objectMapper.writeValueAsString(item.getPaymentDate()));
-            additionalData.put("PaymentMethod", objectMapper.writeValueAsString(item.getPaymentMethod()));
-            additionalData.put("PaymentStatusCode", objectMapper.writeValueAsString(item.getPaymentStatusCode()));
-            additionalData.put("PaymentReferenceInfo", objectMapper.writeValueAsString(item.getPaymentReferenceInfo()));
+            additionalData.put("AgencyCode", objectMapper.writeValueAsString(item.get("AgencyCode")));
+            additionalData.put("IntermediatePaymentId", objectMapper.writeValueAsString(item.get("IntermediatePaymentId")));
+            additionalData.put("BillCategory", objectMapper.writeValueAsString(item.get("BillCategory")));
+            additionalData.put("BillAccount", objectMapper.writeValueAsString(item.get("BillAccount")));
+            additionalData.put("PaymentAmount", objectMapper.writeValueAsString(item.get("PaymentAmount")));
+            additionalData.put("PaymentDate", objectMapper.writeValueAsString(item.get("PaymentDate")));
+            additionalData.put("PaymentMethod", objectMapper.writeValueAsString(item.get("PaymentMethod")));
+            additionalData.put("PaymentStatusCode", objectMapper.writeValueAsString(item.get("PaymentStatusCode")));
+            additionalData.put("PaymentReferenceInfo", objectMapper.writeValueAsString(item.get("PaymentReferenceInfo")));
             return objectMapper.writeValueAsString(additionalData);
         } catch (final JsonProcessingException e) {
             throw new SQLException(e.getMessage());

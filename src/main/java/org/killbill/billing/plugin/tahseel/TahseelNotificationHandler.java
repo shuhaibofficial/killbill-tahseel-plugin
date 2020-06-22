@@ -57,8 +57,8 @@ public class TahseelNotificationHandler {
         //TransactionType transactionType = null;
         try{
             // Check if we have a record for that pspReference (PENDING auth, capture, refund, etc.)
-            PaymentPluginStatus status = getPaymentStatusUpdated(item.getPaymentStatusCode());
-            final TahseelResponsesRecord record = dao.getResponseByBillingAccount(item.getBillAccount());
+            PaymentPluginStatus status = getPaymentStatusUpdated(item.get("PaymentStatusCode").toString());
+            final TahseelResponsesRecord record = dao.getResponseByBillingAccount(item.get("BillAccount").toString());
             if(record != null){
                 kbAccountId = UUID.fromString(record.getKbAccountId());
                 kbTenantId = UUID.fromString(record.getKbTenantId());
@@ -68,7 +68,7 @@ public class TahseelNotificationHandler {
                         kbPaymentId,
                         kbPaymentTransactionId,
                         status, clock.getUTCNow(), tenantId);
-                dao.updateResponseStatus(item.getPaymentStatusCode(), item.getBillAccount(), tenantId);
+                dao.updateResponseStatus(item.get("PaymentStatusCode").toString(), item.get("BillAccount").toString(), tenantId);
 
             }
             dao.addNotification(item, kbAccountId, kbPaymentId, kbPaymentTransactionId, null, clock.getUTCNow(), tenantId);
@@ -76,10 +76,9 @@ public class TahseelNotificationHandler {
         catch (Exception e) {
             if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
                 logger.debug("Tahseel Plugin notification was already processed but Sql SQLIntegrityConstraintViolationException");
-                return;
             } else {
-                logger.error("Error saving the Notification in database", e);
-                throw new PaymentPluginApiException("Error saving Notification in database", e);
+                logger.error("Error saving the Notification in database Nope", e);
+                throw new PaymentPluginApiException("Error saving Notification in database Nope", e);
             }
 
         }
@@ -89,10 +88,9 @@ public class TahseelNotificationHandler {
                     } catch (Exception e) {
                         if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
                             logger.debug("Tahseel Plugin notification was already processed but Sql SQLIntegrityConstraintViolationException");
-                            return;
                         } else {
-                            logger.error("Error saving the Notification in database", e);
-                            throw new PaymentPluginApiException("Error saving Notification in database", e);
+                            logger.error("Error saving the Notification in database Finally", e);
+                            throw new PaymentPluginApiException("Error saving Notification in database Finally", e);
                         }
 
                     }
