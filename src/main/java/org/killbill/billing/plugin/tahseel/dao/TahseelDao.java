@@ -230,7 +230,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
 
         //final String self = item.getLinks().get(DwollaPaymentPluginApi.SELF).getHref();
         Map<String, String> additionalData = new HashMap<String, String>();
-        DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
         execute(dataSource.getConnection(),
                 new WithConnectionCallback<Void>() {
                     @Override
@@ -252,17 +252,17 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                                         TAHSEEL_NOTIFICATIONS.ADDITIONAL_DATA,
                                         TAHSEEL_NOTIFICATIONS.CREATED_DATE,
                                         TAHSEEL_NOTIFICATIONS.KB_TENANT_ID)
-                                .values(kbAccountId.toString(),
-                                        kbPaymentId.toString(),
-                                        kbPaymentTransactionId.toString(),
-                                        transactionType.toString(),
-                                        new BigDecimal(item.get("PaymentAmount").toString()),
+                                .values(kbAccountId == null ? null:kbAccountId.toString(),
+                                        kbAccountId == null ? null:kbPaymentId.toString(),
+                                        kbPaymentTransactionId == null ? null:kbPaymentTransactionId.toString(),
+                                        transactionType == null ? null:transactionType.toString(),
+                                        item.get("PaymentAmount") == null ? null: new BigDecimal(item.get("PaymentAmount").toString()),
                                         "SAR",
-                                        item.get("PaymentStatusCode").toString(),
-                                        toTimestamp(formatter.parseDateTime(item.get("PaymentDate").toString())),
-                                        item.get("BillAccount").toString(),
-                                        item.get("PaymentMethod").toString(),
-                                        getAdditionalData(item),
+                                        item.get("PaymentStatusCode") == null ? null:item.get("PaymentStatusCode").toString(),
+                                        item.get("PaymentDate") == null ? null:toTimestamp(formatter.parseDateTime(item.get("PaymentDate").toString())),
+                                        item.get("BillAccount")==null?null:item.get("BillAccount").toString(),
+                                        item.get("PaymentMethod")==null?null:item.get("PaymentMethod").toString(),
+                                        asString(additionalData),//getAdditionalData(item),
                                         toTimestamp(utcNow),
                                         tenantId.toString())
                                 .execute();
