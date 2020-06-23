@@ -67,11 +67,11 @@ public class TahseelNotificationHandler {
                 updateKillbill(kbAccountId,
                         kbPaymentId,
                         kbPaymentTransactionId,
-                        status, clock.getUTCNow(), tenantId);
-                dao.updateResponseStatus(item.get("PaymentStatusCode").toString(), item.get("BillAccount").toString(), tenantId);
+                        status, clock.getUTCNow(), kbTenantId);
+                dao.updateResponseStatus(item.get("PaymentStatusCode").toString(), item.get("BillAccount").toString(), kbTenantId);
 
             }
-            dao.addNotification(item, kbAccountId, kbPaymentId, kbPaymentTransactionId, null, clock.getUTCNow(), tenantId);
+            dao.addNotification(item, kbAccountId, kbPaymentId, kbPaymentTransactionId, null, clock.getUTCNow(), kbTenantId);
         }
         catch (Exception e) {
             if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
@@ -84,7 +84,7 @@ public class TahseelNotificationHandler {
         }
         finally {
                     try {
-                        dao.addNotification(item, null, null, null, null, clock.getUTCNow(), tenantId);
+                        dao.addNotification(item, null, null, null, null, clock.getUTCNow(), kbTenantId);
                     } catch (Exception e) {
                         if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
                             logger.debug("Tahseel Plugin notification was already processed but Sql SQLIntegrityConstraintViolationException");
