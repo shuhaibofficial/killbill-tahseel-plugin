@@ -76,6 +76,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
     // Payment methods
     public void addPaymentMethod(final UUID kbAccountId,
                                  final UUID  kbPaymentMethodId,
+                                 final boolean isDefault,
                                  final Map<String, Object> additionalDataMap,
                                  final String tahseelId,
                                  final DateTime utcNow,
@@ -88,6 +89,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                            .insertInto(TAHSEEL_PAYMENT_METHODS,
                                    TAHSEEL_PAYMENT_METHODS.KB_ACCOUNT_ID,
                                    TAHSEEL_PAYMENT_METHODS.KB_PAYMENT_METHOD_ID,
+                                   TAHSEEL_PAYMENT_METHODS.IS_DEFAULT,
                                    TAHSEEL_PAYMENT_METHODS.TAHSEEL_ID,
                                    TAHSEEL_PAYMENT_METHODS.IS_DELETED,
                                    TAHSEEL_PAYMENT_METHODS.ADDITIONAL_DATA,
@@ -96,6 +98,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                                    TAHSEEL_PAYMENT_METHODS.KB_TENANT_ID)
                            .values(kbAccountId.toString(),
                                    kbPaymentMethodId.toString(),
+                                   (short) (isDefault ?1:0),
                                    tahseelId,
                                    (short) FALSE,
                                    asString(additionalDataMap),

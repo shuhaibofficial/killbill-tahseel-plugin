@@ -96,8 +96,8 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
          //   throw new PaymentPluginApiException("HPP notification came through, but we encountered a database error", e);
         //}
 
-            final String Status="SUCCESS";
-            return executeInitialTransaction(TransactionType.PURCHASE,Status, kbAccountId, kbPaymentId, kbTransactionId, kbPaymentMethodId, amount, currency, properties, context);
+            //final String Status="SUCCESS";
+            return executeInitialTransaction(TransactionType.PURCHASE,kbAccountId, kbPaymentId, kbTransactionId, kbPaymentMethodId, amount, currency, properties, context);
 
             // We already have a record for that payment transaction and we just updated the response row with additional properties
             // (the API can be called for instance after the user is redirected back from the HPP)
@@ -163,9 +163,9 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
         String objectType = PluginProperties.getValue("object", "payment_method", allProperties);
         String paymentMethodIdIn = PluginProperties.findPluginPropertyValue("tahseelid", allProperties);
         final DateTime utcNow = clock.getUTCNow();
-        final Map<String, Object> additionalDataMap = new HashMap<>();
+        final Map<String, Object> additionalDataMap = new HashMap<>(); //plugins or payment method data
         try {
-            dao.addPaymentMethod(kbAccountId, kbPaymentMethodId, additionalDataMap, paymentMethodIdIn, utcNow, context.getTenantId());
+            dao.addPaymentMethod(kbAccountId, kbPaymentMethodId,setDefault, additionalDataMap, paymentMethodIdIn, utcNow, context.getTenantId());
         } catch (final SQLException e) {
             throw new PaymentPluginApiException("Unable to add payment method", e);
         }
@@ -210,15 +210,16 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
 
     @Override
     public GatewayNotification processNotification(final String notification, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
+        String json = "";
         try {
-            notificationHandler.processNotification(notification, context.getTenantId());
+            json=notificationHandler.processNotification(notification, context.getTenantId());
         } catch (IOException | SQLException e) {
             e.printStackTrace();
         }
-        return new TahseelGatewayNotification(notification);
+
+        return new TahseelGatewayNotification(json);
     }
     private PaymentTransactionInfoPlugin executeInitialTransaction(final TransactionType transactionType,
-                                                                   final String status,
                                                                    final UUID kbAccountId,
                                                                    final UUID kbPaymentId,
                                                                    final UUID kbTransactionId,
@@ -230,7 +231,7 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
         final Account account = getAccount(kbAccountId, context);
         final TahseelPaymentMethodsRecord PaymentMethod = getTahseelPaymentMethod(kbPaymentMethodId, context);
         final DateTime utcNow = clock.getUTCNow();
-        final long number = (long) Math.floor(Math.random() * 9_000_000_000L) + 1_000_000_000L;
+        final long number = (long) Math.floor(Math.random() * 9_000_000_000L) + 1_000_000_000L; //Generating some tahseel id/BillAcct
         final String tahseel_billing_aacount = String.valueOf(number);
         final UUID tahseel_rq_uid = UUID.randomUUID();
         String status_code = "E999999";
@@ -242,21 +243,22 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
             status_message = soapResponse.getMsgRsHdr().getResponseStatus().getStatusDesc();
         }
         catch (final Exception e) {
-            throw new PaymentPluginApiException("WS service Errror ", e);
+            throw new PaymentPluginApiException("Web Soap service Error ", e);
         }
 
         try {
             final TahseelResponsesRecord responsesRecord = dao.addResponse(kbAccountId, kbPaymentId, kbTransactionId, transactionType, amount, currency,tahseel_billing_aacount, tahseel_rq_uid,status_code,status_message, utcNow, context.getTenantId());
             return new TahseelPaymentTransactionInfoPlugin(
-                    kbAccountId,
-                    kbTransactionId,
+                    kbPaymentId,
+                    kbPaymentMethodId,
                     transactionType,
                     amount,
+                    currency,
                     getPaymentPluginStatus(status_code),
                     status_code,
                     status_message,
-                    null,
-                    null,
+                    tahseel_rq_uid.toString(),
+                    tahseel_rq_uid.toString(),
                     DateTime.now(),
                     DateTime.now(),
                     properties);
@@ -269,11 +271,11 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
         try {
             paymentMethod = dao.getPaymentMethod(kbPaymentMethodId, context.getTenantId());
         } catch (SQLException e) {
-            throw new PaymentPluginApiException("There was an error trying to load Dwolla payment method for KillBill payment method " + kbPaymentMethodId, e);
+            throw new PaymentPluginApiException("There was an error trying to load Tahseel payment method for KillBill payment method " + kbPaymentMethodId, e);
         }
 
         if (paymentMethod == null) {
-            throw new PaymentPluginApiException(null, "No Dwolla payment method was found for killbill payment method " + kbPaymentMethodId);
+            throw new PaymentPluginApiException(null, "No Tahseel payment method was found for killbill payment method " + kbPaymentMethodId);
         }
         return paymentMethod;
     }

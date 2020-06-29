@@ -16,8 +16,8 @@ import org.killbill.billing.plugin.api.payment.PluginPaymentTransactionInfoPlugi
 import org.killbill.billing.plugin.tahseel.dao.TahseelDao;
 import org.killbill.billing.plugin.tahseel.dao.gen.tables.records.TahseelResponsesRecord;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-//import com.firstdata.payeezy.models.transaction.TransactionResponse;
+//import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.google.common.base.Strings;
 
 public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactionInfoPlugin {
@@ -46,24 +46,7 @@ public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactio
                 properties);
     }
 
-    public TahseelPaymentTransactionInfoPlugin(final UUID kbPaymentId, final UUID kbTransactionPaymentPaymentId,
-                                               final TransactionType transactionType,
-                                               final BigDecimal amount, PaymentPluginStatus pending, String status_code, String status_message, final String currency,
-                                               final List<PluginProperty> properties, DateTime dateTime, DateTime now, Iterable<PluginProperty> pluginProperties) {
-        super(kbPaymentId,
-                kbTransactionPaymentPaymentId,
-                transactionType,
-                amount,
-                Currency.valueOf(currency),
-                PaymentPluginStatus.ERROR,
-                "Not supported",
-                null,
-                null,
-                null,
-                DateTime.now(),
-                DateTime.now(),
-                properties);
-    }
+
 
 
     public TahseelPaymentTransactionInfoPlugin(TahseelResponsesRecord record) {
@@ -81,6 +64,24 @@ public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactio
                 new DateTime(record.getCreatedDate(), DateTimeZone.UTC),
                 TahseelModelPluginBase.buildPluginProperties(record.getAdditionalData()));
     }
+
+    public TahseelPaymentTransactionInfoPlugin(UUID kbPaymentId, UUID kbPaymentMethodId, TransactionType transactionType, BigDecimal amount, Currency currency, PaymentPluginStatus paymentPluginStatus, String status_code, String status_message, String firstPaymentReferenceId, String secondPaymentReferenceId, DateTime createdDate, DateTime effectiveDate, Iterable<PluginProperty> properties) {
+        super(kbPaymentId,
+                kbPaymentMethodId,
+                transactionType,
+                amount,
+                currency,
+                paymentPluginStatus,
+                status_code,
+                status_message,
+                firstPaymentReferenceId,
+                secondPaymentReferenceId,
+                createdDate,
+                effectiveDate,
+                (List<PluginProperty>) properties);
+    }
+
+
     protected static PaymentPluginStatus getPaymentPluginStatus(final String status_code) {
 
 

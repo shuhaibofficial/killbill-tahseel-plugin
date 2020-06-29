@@ -2,6 +2,7 @@ package org.killbill.billing.plugin.tahseel;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.joda.time.DateTime;
@@ -47,13 +48,16 @@ public class TahseelNotificationHandler {
         this.clock = clock;
     }
 
-    public void processNotification(final String notification, final UUID tenantId) throws PaymentPluginApiException, IOException, SQLException {
+    public String processNotification(final String notification, final UUID tenantId) throws PaymentPluginApiException, IOException, SQLException {
         final Item item = JsonHelper.getObjectFromRequest(notification, Item.class);
 
         UUID kbAccountId = null;
         UUID kbPaymentId = null;
         UUID kbPaymentTransactionId = null;
         UUID kbTenantId = null;
+        String esbStatus = "E999998";
+        String esbCode ="Unrecoverable error";
+        String json ="";
         //TransactionType transactionType = null;
         try{
             // Check if we have a record for that pspReference (PENDING auth, capture, refund, etc.)
@@ -64,14 +68,22 @@ public class TahseelNotificationHandler {
                 kbTenantId = UUID.fromString(record.getKbTenantId());
                 kbPaymentId = UUID.fromString(record.getKbPaymentId());
                 kbPaymentTransactionId = UUID.fromString(record.getKbPaymentTransactionId());
-                updateKillbill(kbAccountId,
+                Payment payment=updateKillbill(kbAccountId,
                         kbPaymentId,
                         kbPaymentTransactionId,
                         status, clock.getUTCNow(), kbTenantId);
+                if(payment != null){
+                    ObjectMapper mapper = new ObjectMapper();
+                    ObjectNode Response = mapper.createObjectNode();
+                    Response.put("statusCode","I000000");
+                    Response.put("statusDesc","Success");
+                    json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(Response);
+                }
                 dao.updateResponseStatus(item.get("PaymentStatusCode").toString(), item.get("BillAccount").toString(), kbTenantId);
 
             }
             dao.addNotification(item, kbAccountId, kbPaymentId, kbPaymentTransactionId, null, clock.getUTCNow(), kbTenantId);
+
         }
         catch (Exception e) {
             if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
@@ -97,6 +109,7 @@ public class TahseelNotificationHandler {
 
         }
 
+        return json;
     }
 
     private Payment updateKillbill(@Nullable final UUID kbAccountId,
