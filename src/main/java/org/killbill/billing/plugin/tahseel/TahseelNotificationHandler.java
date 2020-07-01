@@ -49,7 +49,7 @@ public class TahseelNotificationHandler {
         this.clock = clock;
     }
 
-    public String processNotification(final String notification, final UUID tenantId) throws PaymentPluginApiException, IOException, SQLException {
+    public String processNotification(final String notification, final UUID tenantId) throws PaymentPluginApiException, IOException {
         final Item item = JsonHelper.getObjectFromRequest(notification, Item.class);
 
         UUID kbAccountId = null;
@@ -60,9 +60,16 @@ public class TahseelNotificationHandler {
         String esbMessage ="Unrecoverable error";
         String json ="";
         //TransactionType transactionType = null;
+
+        ObjectMapper defmapper = new ObjectMapper();
+        ObjectNode ErrorResponseJson = defmapper.createObjectNode();
+        ErrorResponseJson.put("statusCode",esbStatus);
+        ErrorResponseJson.put("statusDesc",esbMessage);
+        json = defmapper.writerWithDefaultPrettyPrinter().writeValueAsString(ErrorResponseJson);
         try{
-            // Check if we have a record for that pspReference (PENDING auth, capture, refund, etc.)
+            // get Payment Status by notification status to killbill status
             PaymentPluginStatus status = getPaymentStatusUpdated(item.get("PaymentStatusCode").toString());
+            //Check if we have a record for that pspReference (PENDING auth, capture, refund, etc.)
             final TahseelResponsesRecord record = dao.getResponseByBillingAccount(item.get("BillAccount").toString());
             if(record != null){
                 kbAccountId = UUID.fromString(record.getKbAccountId());
@@ -86,16 +93,17 @@ public class TahseelNotificationHandler {
                 else{
                     ObjectMapper mapper = new ObjectMapper();
                     ObjectNode Response = mapper.createObjectNode();
-                    Response.put("statusCode",esbStatus);
-                    Response.put("statusDesc",esbMessage);
+                    Response.put("statusCode","E002001");
+                    Response.put("statusDesc","Entity Not Found");
                     json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(Response);
                 }
 
 
             }
-            dao.addNotification(item, kbAccountId, kbPaymentId, kbPaymentTransactionId, null, clock.getUTCNow(), kbTenantId);
+            //dao.addNotification(item, kbAccountId, kbPaymentId, kbPaymentTransactionId, null, clock.getUTCNow(), kbTenantId);
 
         }
+
         catch (Exception e) {
             if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
                 logger.debug("Tahseel Plugin notification was already processed but Sql SQLIntegrityConstraintViolationException");
@@ -107,7 +115,7 @@ public class TahseelNotificationHandler {
         }
         finally {
                     try {
-                        dao.addNotification(item, null, null, null, null, clock.getUTCNow(), kbTenantId);
+                        dao.addNotification(item, kbAccountId, kbPaymentId, kbPaymentTransactionId, null, clock.getUTCNow(), kbTenantId);
                     } catch (Exception e) {
                         if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
                             logger.debug("Tahseel Plugin notification was already processed but Sql SQLIntegrityConstraintViolationException");

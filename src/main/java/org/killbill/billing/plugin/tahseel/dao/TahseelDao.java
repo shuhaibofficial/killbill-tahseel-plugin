@@ -229,7 +229,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                                 @Nullable final UUID kbPaymentTransactionId,
                                 @Nullable final TransactionType transactionType,
                                 final DateTime utcNow,
-                                final UUID tenantId) throws SQLException {
+                                @Nullable final UUID tenantId) throws SQLException {
 
         //final String self = item.getLinks().get(DwollaPaymentPluginApi.SELF).getHref();
         Map<String, String> additionalData = new HashMap<String, String>();
@@ -267,7 +267,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                                         item.get("PaymentMethod")==null?null:item.get("PaymentMethod").toString(),
                                         getAdditionalData(item),//getAdditionalData(item),
                                         toTimestamp(utcNow),
-                                        tenantId.toString())
+                                        tenantId == null ? null: tenantId.toString())
                                 .execute();
                         return null;
                     }
@@ -280,7 +280,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                     public TahseelResponsesRecord withConnection(final Connection conn) throws SQLException {
                         return DSL.using(conn, dialect, settings)
                                 .selectFrom(TAHSEEL_RESPONSES)
-                                .where(TAHSEEL_RESPONSES.TAHSEEL_BILLING_ACCOUNT.equal(tahseel_billing_account))
+                                .where(TAHSEEL_RESPONSES.TAHSEEL_BILLING_ACCOUNT.equal(tahseel_billing_account)).and(TAHSEEL_RESPONSES.STATUS_CODE.eq("I000000"))// handled Billing account and status
                                 .orderBy(TAHSEEL_RESPONSES.RECORD_ID.desc())
                                 // Can have multiple entries for the same billing account
                                 .limit(1)

@@ -27,7 +27,7 @@
     <groupId>org.kill-bill.billing.plugin.java</groupId>
     <artifactId>tahseel-plugin</artifactId>
     <name>Kill Bill OSGI Tahseel bundle</name>
-    <version>2.0.9-SNAPSHOT</version>
+    <version>3.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <description>Kill Bill Purchase Tahseel plugin</description>
     <url>https://github.com/shuhaibofficial/killbill-tahseel-plugin</url>
