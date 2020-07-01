@@ -265,7 +265,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                                         item.get("PaymentDate") == null ? null:toTimestamp(formatter.parseDateTime(item.get("PaymentDate").toString())),
                                         item.get("BillAccount")==null?null:item.get("BillAccount").toString(),
                                         item.get("PaymentMethod")==null?null:item.get("PaymentMethod").toString(),
-                                        asString(additionalData),//getAdditionalData(item),
+                                        getAdditionalData(item),//getAdditionalData(item),
                                         toTimestamp(utcNow),
                                         tenantId.toString())
                                 .execute();
@@ -320,6 +320,7 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
             additionalData.put("PaymentAmount", objectMapper.writeValueAsString(item.get("PaymentAmount")));
             additionalData.put("PaymentDate", objectMapper.writeValueAsString(item.get("PaymentDate")));
             additionalData.put("PaymentMethod", objectMapper.writeValueAsString(item.get("PaymentMethod")));
+            additionalData.put("PaymentMethodDetails", objectMapper.writeValueAsString(item.get("PaymentMethodDetails")));
             additionalData.put("PaymentStatusCode", objectMapper.writeValueAsString(item.get("PaymentStatusCode")));
             additionalData.put("PaymentReferenceInfo", objectMapper.writeValueAsString(item.get("PaymentReferenceInfo")));
             return objectMapper.writeValueAsString(additionalData);

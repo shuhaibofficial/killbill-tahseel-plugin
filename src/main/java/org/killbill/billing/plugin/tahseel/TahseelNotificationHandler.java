@@ -12,6 +12,7 @@ import org.killbill.billing.osgi.libs.killbill.OSGIKillbillAPI;
 import org.killbill.billing.payment.api.*;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.plugin.api.core.PaymentApiWrapper;
 import org.killbill.billing.plugin.tahseel.client.model.Item;
 import org.killbill.billing.plugin.tahseel.dao.TahseelDao;
 import org.killbill.billing.plugin.tahseel.JsonHelper;
@@ -30,7 +31,7 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.UUID;
 
 import static java.lang.String.valueOf;
-//import static org.killbill.billing.plugin.api.core.PaymentApiWrapper.filterForTransaction;
+import static org.killbill.billing.plugin.api.core.PaymentApiWrapper.filterForTransaction;
 
 //import static org.killbill.billing.plugin.dwolla.client.EventTopic.valueOf;
 
@@ -56,7 +57,7 @@ public class TahseelNotificationHandler {
         UUID kbPaymentTransactionId = null;
         UUID kbTenantId = null;
         String esbStatus = "E999998";
-        String esbCode ="Unrecoverable error";
+        String esbMessage ="Unrecoverable error";
         String json ="";
         //TransactionType transactionType = null;
         try{
@@ -68,18 +69,28 @@ public class TahseelNotificationHandler {
                 kbTenantId = UUID.fromString(record.getKbTenantId());
                 kbPaymentId = UUID.fromString(record.getKbPaymentId());
                 kbPaymentTransactionId = UUID.fromString(record.getKbPaymentTransactionId());
-                Payment payment=updateKillbill(kbAccountId,
+                PaymentTransaction updatedPaymentTransaction=updateKillbill(kbAccountId,
                         kbPaymentId,
                         kbPaymentTransactionId,
                         status, clock.getUTCNow(), kbTenantId);
-                if(payment != null){
+
+                if(updatedPaymentTransaction != null){  //More with issue payment can be handled
                     ObjectMapper mapper = new ObjectMapper();
                     ObjectNode Response = mapper.createObjectNode();
                     Response.put("statusCode","I000000");
                     Response.put("statusDesc","Success");
+                    dao.updateResponseStatus(item.get("PaymentStatusCode").toString(), item.get("BillAccount").toString(), kbTenantId); //Possible Exception Case for Returning a non success msg
+                    json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(Response);
+
+                }
+                else{
+                    ObjectMapper mapper = new ObjectMapper();
+                    ObjectNode Response = mapper.createObjectNode();
+                    Response.put("statusCode",esbStatus);
+                    Response.put("statusDesc",esbMessage);
                     json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(Response);
                 }
-                dao.updateResponseStatus(item.get("PaymentStatusCode").toString(), item.get("BillAccount").toString(), kbTenantId);
+
 
             }
             dao.addNotification(item, kbAccountId, kbPaymentId, kbPaymentTransactionId, null, clock.getUTCNow(), kbTenantId);
@@ -112,7 +123,7 @@ public class TahseelNotificationHandler {
         return json;
     }
 
-    private Payment updateKillbill(@Nullable final UUID kbAccountId,
+    private PaymentTransaction updateKillbill(@Nullable final UUID kbAccountId,
                                    @Nullable final UUID kbPaymentId,
                                    @Nullable final UUID kbPaymentTransactionId,
                                    final PaymentPluginStatus paymentPluginStatus,
@@ -134,12 +145,12 @@ public class TahseelNotificationHandler {
             // Update Kill Bill
             if (PaymentPluginStatus.UNDEFINED.equals(paymentPluginStatus)) {
                 // We cannot do anything
-                return payment;
+                return paymentTransaction;
             } else if (paymentTransaction != null && TransactionStatus.PENDING.equals(paymentTransaction.getTransactionStatus())) {
-                return transitionPendingTransaction(account, kbPaymentTransactionId, paymentPluginStatus, context);
+                return transitionPendingTransaction(account,kbPaymentId, kbPaymentTransactionId, paymentPluginStatus, context);
             } else {
                 // Payment in Kill Bill has the latest state, nothing to do (we simply updated our plugin tables in case Dwolla had extra information for us)
-                return payment;
+                return paymentTransaction;
             }
         } else {
             // API payment unknown to Kill Bill, does it belong to a different system?
@@ -175,14 +186,25 @@ public class TahseelNotificationHandler {
         return null;
     }
     //KILL BILL API
-    private Payment transitionPendingTransaction(final Account account, final UUID kbPaymentTransactionId, final PaymentPluginStatus paymentPluginStatus, final CallContext context) {
+    private PaymentTransaction transitionPendingTransaction(final Account account,final UUID kbPaymentId, final UUID kbPaymentTransactionId, final PaymentPluginStatus paymentPluginStatus, final CallContext context) {
+        final PaymentApiWrapper paymentApiWrapper = new PaymentApiWrapper(osgiKillbillAPI, false); //Withcontrol default false ,can be set Plugin config
         try {
-            return osgiKillbillAPI.getPaymentApi().notifyPendingTransactionOfStateChanged(account, kbPaymentTransactionId, paymentPluginStatus == PaymentPluginStatus.PROCESSED, context);
+            //return osgiKillbillAPI.getPaymentApi().notifyPendingTransactionOfStateChanged(account, kbPaymentTransactionId, paymentPluginStatus == PaymentPluginStatus.PROCESSED, context);
+            return paymentApiWrapper.transitionPendingTransaction(account, kbPaymentId, kbPaymentTransactionId, paymentPluginStatus, context);
+
         } catch (final PaymentApiException e) {
             // Have Dwolla retry
             throw new RuntimeException(String.format("Failed to transition pending transaction kbPaymentTransactionId='%s'", kbPaymentTransactionId), e);
         }
     }
+//Getting the  boolean invoicePaymentEnabled = properties.getProperty(PROPERTY_PREFIX + "invoicePaymentEnabled", "false"); form PLUGIN CONFIG
+  //public Boolean getInvoicePaymentEnabled() {
+    //        return Boolean.valueOf(invoicePaymentEnabled);
+    //    }
+    /*private PaymentApiWrapper getPaymentApiWrapper(final AdyenConfigProperties tenantConfiguration) {
+        final Boolean invoicePaymentEnabled = tenantConfiguration != null && tenantConfiguration.getInvoicePaymentEnabled();
+        return new PaymentApiWrapper(osgiKillbillAPI, invoicePaymentEnabled);
+    }*/
 
 
     private PaymentPluginStatus getPaymentStatusUpdated(final String PaymentStatusCode) {
