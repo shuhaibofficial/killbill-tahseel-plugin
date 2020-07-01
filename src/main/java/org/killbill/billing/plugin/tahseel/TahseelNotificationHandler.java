@@ -187,7 +187,7 @@ public class TahseelNotificationHandler {
     }
     //KILL BILL API
     private PaymentTransaction transitionPendingTransaction(final Account account,final UUID kbPaymentId, final UUID kbPaymentTransactionId, final PaymentPluginStatus paymentPluginStatus, final CallContext context) {
-        final PaymentApiWrapper paymentApiWrapper = new PaymentApiWrapper(osgiKillbillAPI, false); //Withcontrol default false ,can be set Plugin config
+        final PaymentApiWrapper paymentApiWrapper = new PaymentApiWrapper(osgiKillbillAPI, true); //Withcontrol default false ,can be set Plugin config
         try {
             //return osgiKillbillAPI.getPaymentApi().notifyPendingTransactionOfStateChanged(account, kbPaymentTransactionId, paymentPluginStatus == PaymentPluginStatus.PROCESSED, context);
             return paymentApiWrapper.transitionPendingTransaction(account, kbPaymentId, kbPaymentTransactionId, paymentPluginStatus, context);
