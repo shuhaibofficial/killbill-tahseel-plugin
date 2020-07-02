@@ -32,6 +32,8 @@ import java.util.UUID;
 
 import static java.lang.String.valueOf;
 import static org.killbill.billing.plugin.api.core.PaymentApiWrapper.filterForTransaction;
+import static org.killbill.billing.plugin.tahseel.JsonHelper.buildJsonResponse;
+import static org.killbill.billing.plugin.tahseel.client.model.ErrorCodes.*;
 
 //import static org.killbill.billing.plugin.dwolla.client.EventTopic.valueOf;
 
@@ -56,21 +58,16 @@ public class TahseelNotificationHandler {
         UUID kbPaymentId = null;
         UUID kbPaymentTransactionId = null;
         UUID kbTenantId = null;
-        String esbStatus = "E999998";
-        String esbMessage ="Unrecoverable error";
-        String json ="";
+        String json =buildJsonResponse(FAILED);
         //TransactionType transactionType = null;
 
-        ObjectMapper defmapper = new ObjectMapper();
-        ObjectNode ErrorResponseJson = defmapper.createObjectNode();
-        ErrorResponseJson.put("statusCode",esbStatus);
-        ErrorResponseJson.put("statusDesc",esbMessage);
-        json = defmapper.writerWithDefaultPrettyPrinter().writeValueAsString(ErrorResponseJson);
+
         try{
             // get Payment Status by notification status to killbill status
             PaymentPluginStatus status = getPaymentStatusUpdated(item.get("PaymentStatusCode").toString());
             //Check if we have a record for that pspReference (PENDING auth, capture, refund, etc.)
             final TahseelResponsesRecord record = dao.getResponseByBillingAccount(item.get("BillAccount").toString());
+            json = record == null ? buildJsonResponse(NOTFOUND) : buildJsonResponse(FAILED);
             if(record != null){
                 kbAccountId = UUID.fromString(record.getKbAccountId());
                 kbTenantId = UUID.fromString(record.getKbTenantId());
@@ -82,22 +79,13 @@ public class TahseelNotificationHandler {
                         status, clock.getUTCNow(), kbTenantId);
 
                 if(updatedPaymentTransaction != null){  //More with issue payment can be handled
-                    ObjectMapper mapper = new ObjectMapper();
-                    ObjectNode Response = mapper.createObjectNode();
-                    Response.put("statusCode","I000000");
-                    Response.put("statusDesc","Success");
                     dao.updateResponseStatus(item.get("PaymentStatusCode").toString(), item.get("BillAccount").toString(), kbTenantId); //Possible Exception Case for Returning a non success msg
-                    json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(Response);
+                    json = buildJsonResponse(SUCCESS);
 
                 }
                 else{
-                    ObjectMapper mapper = new ObjectMapper();
-                    ObjectNode Response = mapper.createObjectNode();
-                    Response.put("statusCode","E002001");
-                    Response.put("statusDesc","Entity Not Found");
-                    json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(Response);
+                    json = buildJsonResponse(NOTFOUND);
                 }
-
 
             }
             //dao.addNotification(item, kbAccountId, kbPaymentId, kbPaymentTransactionId, null, clock.getUTCNow(), kbTenantId);
@@ -157,7 +145,7 @@ public class TahseelNotificationHandler {
             } else if (paymentTransaction != null && TransactionStatus.PENDING.equals(paymentTransaction.getTransactionStatus())) {
                 return transitionPendingTransaction(account,kbPaymentId, kbPaymentTransactionId, paymentPluginStatus, context);
             } else {
-                // Payment in Kill Bill has the latest state, nothing to do (we simply updated our plugin tables in case Dwolla had extra information for us)
+                // Payment in Kill Bill has the latest state, nothing to do (we simply updated our plugin tables in case Tahseel had extra information for us)
                 return paymentTransaction;
             }
         } else {
@@ -197,7 +185,7 @@ public class TahseelNotificationHandler {
     private PaymentTransaction transitionPendingTransaction(final Account account,final UUID kbPaymentId, final UUID kbPaymentTransactionId, final PaymentPluginStatus paymentPluginStatus, final CallContext context) {
         final PaymentApiWrapper paymentApiWrapper = new PaymentApiWrapper(osgiKillbillAPI, true); //Withcontrol default false ,can be set Plugin config
         try {
-            //return osgiKillbillAPI.getPaymentApi().notifyPendingTransactionOfStateChanged(account, kbPaymentTransactionId, paymentPluginStatus == PaymentPluginStatus.PROCESSED, context);
+            //return osgiKillbillAPI.getPaymentApi().notifyPendingTransactionOfStateChanged(account, kbPaymentTransactionId, paymentPluginStatus == PaymentPluginStatus.PROCESSED, context);  //old api style
             return paymentApiWrapper.transitionPendingTransaction(account, kbPaymentId, kbPaymentTransactionId, paymentPluginStatus, context);
 
         } catch (final PaymentApiException e) {

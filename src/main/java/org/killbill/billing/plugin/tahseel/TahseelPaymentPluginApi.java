@@ -213,7 +213,7 @@ public class TahseelPaymentPluginApi extends PluginPaymentPluginApi <TahseelResp
         String json = "";
         try {
             json=notificationHandler.processNotification(notification, context.getTenantId());
-        } catch (IOException | SQLException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

@@ -87,11 +87,11 @@ public class TahseelPaymentTransactionInfoPlugin extends PluginPaymentTransactio
 
         if ("processed".equals(status_code)) {
             return PaymentPluginStatus.PROCESSED;
-        } else if ("I000000".equals(status_code)) {
+        } else if ("I000000".equals(status_code.toUpperCase())) {
             // Untestable - see https://stripe.com/docs/ach#ach-payments-workflow
             return PaymentPluginStatus.PENDING;
         }
-         else if (status_code.startsWith("E")) {
+         else if (status_code.toUpperCase().startsWith("E")) {
             // TODO Do better (look at the type of error to narrow down on CANCELED)!
             return PaymentPluginStatus.ERROR;
         } else {

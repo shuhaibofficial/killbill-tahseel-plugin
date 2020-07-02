@@ -16,14 +16,19 @@
 
 package org.killbill.billing.plugin.tahseel;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
+import org.killbill.billing.plugin.tahseel.client.model.ErrorCodes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 public class JsonHelper {
+
+
 
     /**
      * Convert json string into a java object
@@ -63,6 +68,19 @@ public class JsonHelper {
             throw new PaymentPluginApiException("Exception during generation of the Object from JSON", e.getCause());
         }
         return getObjectFromRequest(jsonString, clazz);
+    }
+
+    public static String buildJsonResponse(ErrorCodes errorCode) {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode Response = mapper.createObjectNode();
+        Response.put("statusCode", errorCode.code);
+        Response.put("statusDesc", errorCode.status);
+        try {
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(Response);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static String getIdFromUrl(final String url) {

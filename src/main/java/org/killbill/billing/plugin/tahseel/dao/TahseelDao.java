@@ -280,7 +280,8 @@ public class TahseelDao extends PluginPaymentDao<TahseelResponsesRecord, Tahseel
                     public TahseelResponsesRecord withConnection(final Connection conn) throws SQLException {
                         return DSL.using(conn, dialect, settings)
                                 .selectFrom(TAHSEEL_RESPONSES)
-                                .where(TAHSEEL_RESPONSES.TAHSEEL_BILLING_ACCOUNT.equal(tahseel_billing_account)).and(TAHSEEL_RESPONSES.STATUS_CODE.eq("I000000"))// handled Billing account and status
+                                //Checking the incoming notification payment reference with DB also the state of the payment "10000"-> pending
+                                .where(TAHSEEL_RESPONSES.TAHSEEL_BILLING_ACCOUNT.equal(tahseel_billing_account)).and(TAHSEEL_RESPONSES.STATUS_CODE.eq("I000000"))
                                 .orderBy(TAHSEEL_RESPONSES.RECORD_ID.desc())
                                 // Can have multiple entries for the same billing account
                                 .limit(1)
